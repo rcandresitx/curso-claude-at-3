@@ -1,0 +1,23 @@
+.claude/skills/implement-plan/SKILL.md
+  s_14d4076f418767::t_4b650f8bb12de2 3-4,9,13,15-18,21,23,25-30,41,47,49-53,58,67-69
+.claude/skills/plan-feature/SKILL.md
+  s_14d4076f418767::t_0a723ecffa9801 4,13-17,30-32
+.claude/settings.json
+  s_14d4076f418767::t_45e9209a38ca76 25-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "37dcae6c150f04ddfc96310c3a7d0879b572ccc5",
+  "prompts": {},
+  "sessions": {
+    "s_14d4076f418767": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b3a87a60-5a25-4502-9ef5-a5d81b3b15e4",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Andres Felipe Rodriguez Cabanzo <andresfrc@ext.inditex.com>"
+    }
+  }
+}
