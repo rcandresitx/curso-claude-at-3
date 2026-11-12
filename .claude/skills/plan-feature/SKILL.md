@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 description: Planifica una nueva funcionalidad o el arreglo de un error. Úsala cuando pidan planificar, diseñar el plan o preparar el trabajo de una feature, issue o bug antes de implementarlo.
-argument-hint: <num_issue> <descripción de la funcionalidad o del error>
+argument-hint: <num_issue o url de la issue>
 ---
 
 # plan-feature
@@ -10,9 +10,11 @@ Genera un plan de implementación con un formato único para todo el equipo. **N
 
 ## Pasos
 
-1. **Obtén los datos de entrada** a partir de `$ARGUMENTS` o de la conversación:
-   - Número de issue (`<num_issue>`). Si no se ha dado, pregúntalo antes de continuar.
-   - Descripción de la funcionalidad o del error.
+1. **Obtén la issue con GitHub CLI (`gh`)**:
+   - El usuario debe indicar el número o la URL de la issue en `$ARGUMENTS` o en la conversación. Si no la ha dado, pregúntala antes de continuar.
+   - Lee la issue con `gh issue view <num_o_url> --comments` (añade `--json title,body,labels,state,comments` si necesitas datos estructurados). Si la URL es de otro repositorio, `gh` la resuelve; si es un número, usa el repositorio actual.
+   - Extrae el número de issue (`<num_issue>`), el título y la descripción (funcionalidad o error), y tenlos en cuenta junto con los comentarios. No pidas al usuario una descripción adicional salvo que la issue sea insuficiente.
+   - Si `gh` falla (no instalado, sin autenticar, issue inexistente), informa del error y detente sin inventar el contenido.
 2. **Investiga el código** necesario para planificar con precisión. Lee `CLAUDE.md` y respeta sus convenciones (arquitectura por capas: controllers, services, repositories, models y utils; funciones en snake_case; camelCase en el JSON y snake_case en SQL). Si el plan toca paginación en endpoints GET, lee `docs/api/api-pagination.md`.
 3. **Lee la plantilla** [assets/template.md](assets/template.md) y rellénala completa, sin quitar ni reordenar secciones:
    - **Objetivo**: qué se quiere conseguir y por qué. En un bug, comportamiento actual vs. esperado.
@@ -25,8 +27,9 @@ Genera un plan de implementación con un formato único para todo el equipo. **N
    - Crea la carpeta `plans/` si no existe.
    - `<breve-descripcion>` en kebab-case, minúsculas, sin tildes y de 2 a 5 palabras (ej.: `plans/42-paginacion-vendehumos.md`).
    - Si el archivo ya existe, no lo sobrescribas sin confirmar con el usuario.
-5. **Responde** con la ruta del archivo creado y un resumen muy breve, destacando las dudas y decisiones que requieren revisión del usuario.
-6. **Avisa por Slack**: como último paso, envía un mensaje al canal de Slack `curso-claude-ed3` indicando que ya se ha planificado la tarea. Usa la herramienta MCP de Slack (`mcp__slack__slack_post_message` para publicar el mensaje en el canal con el id "C0CGZ01R9M2"; si no están cargadas, cárgalas antes con ToolSearch).
+5. **Comenta la issue con el plan**: publica el contenido del plan como comentario de la issue con `gh issue comment <num_o_url> --body-file plans/<num_issue>-<breve-descripcion>.md`. Si el comentario no se puede publicar, informa del fallo sin reintentar en bucle.
+6. **Responde** con la ruta del archivo creado, el enlace al comentario de la issue y un resumen muy breve, destacando las dudas y decisiones que requieren revisión del usuario.
+7. **Avisa por Slack**: como último paso, envía un mensaje al canal de Slack `curso-claude-ed3` indicando que ya se ha planificado la tarea. Usa la herramienta MCP de Slack (`mcp__slack__slack_post_message` para publicar el mensaje en el canal con el id "C0CGZ01R9M2"; si no están cargadas, cárgalas antes con ToolSearch).
    - El mensaje debe incluir el número de issue, una descripción breve y la ruta del plan (ej.: `Ya se ha planificado la issue 42 (paginación de vendehumos): plans/42-paginacion-vendehumos.md`).
    - No incluyas datos privados (emails, rutas locales absolutas, secretos). Si no se puede enviar el mensaje, informa al usuario del fallo, sin reintentar en bucle.
 
