@@ -1,0 +1,19 @@
+.github/workflows/ci.yml
+  s_14d4076f418767::t_d1e78100418819 1-77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "5879d202a0b3fde0d3b95fd744492ed4b97dfe47",
+  "prompts": {},
+  "sessions": {
+    "s_14d4076f418767": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b3a87a60-5a25-4502-9ef5-a5d81b3b15e4",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Andres Felipe Rodriguez Cabanzo <andresfrc@ext.inditex.com>"
+    }
+  }
+}
