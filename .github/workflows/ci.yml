@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        # Ejecuta el script "lint" de los paquetes que lo definan (hoy ninguno).
+        run: npm run lint --workspaces --if-present
+
+      - name: Typecheck API
+        # La API se ejecuta con tsx y no tiene script de build: se valida con tsc.
+        run: npx tsc --noEmit -p packages/api/tsconfig.json
+
+      - name: Build
+        run: npm run build --workspaces --if-present
+
+      - name: Test API
+        run: npm test
+
+      - name: Test web-admin
+        run: npm run test -w @resttek/web-admin
+
+      - name: Review docs consistency with Claude
+        # Sin secretos en PRs desde forks, así que solo se ejecuta en PRs del propio repo.
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            Revisa que los cambios de esta PR siguen en sintonía con la documentación del proyecto.
+
+            1. Obtén los cambios con `gh pr diff ${{ github.event.pull_request.number }}`.
+            2. Lee la documentación de la carpeta `docs/` (arquitectura, glosario, modelo de datos, etc.) y todos los documentos OpenAPI que existan en el repositorio (busca `openapi*.yml`, `openapi*.yaml` y `openapi*.json`, por ejemplo `docs/api/openapi.yml`), ignorando `node_modules`.
+            3. Compara con el diff y detecta incoherencias, por ejemplo:
+               - rutas, parámetros, cuerpos, respuestas, códigos de estado, roles o validaciones de la API que cambian y no se reflejan en OpenAPI;
+               - cambios de tablas, columnas o relaciones que contradicen `docs/dominio/modelo-datos.md`;
+               - cambios de estructura, capas o convenciones que contradicen `docs/arquitectura/`;
+               - términos del dominio que no cuadran con `docs/dominio/glosario.md`;
+               - documentación o contrato que describen algo que el código de la PR ya no hace.
+            4. Si algo no cuadra, publica UN solo comentario en la PR con `gh pr comment ${{ github.event.pull_request.number }} --body "..."`, en español, listando cada incoherencia con el documento afectado (ruta), el fichero/cambio de la PR que la causa y qué habría que actualizar.
+            5. Si todo cuadra, no publiques ningún comentario.
+
+            No modifiques ficheros ni hagas commits: solo revisa y comenta.
+          claude_args: '--allowedTools "Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(gh pr view:*),Read,Grep,Glob"'
